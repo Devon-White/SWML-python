@@ -4,12 +4,6 @@ import json
 from swml_methods import *
 from swml_statements import *
 
-
-def add_element(self, element):
-    if not hasattr(element, "to_dict"):
-        raise ValueError("element must have a to_dict method")
-    self.elements.append(element)
-
 class SWMLResponse:
     def __init__(self):
         self.elements = []
