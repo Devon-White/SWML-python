@@ -19,9 +19,7 @@ class SWMLResponse:
             raise ValueError("element must have a to_dict method")
         self.elements.append(element)
 
-    # In SWMLResponse class
-    # In SWMLResponse class
-    # In SWMLResponse class
+
     # In SWMLResponse class
     def to_json(self):
         sections = {"sections": {"main": []}}
