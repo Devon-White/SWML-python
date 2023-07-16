@@ -80,7 +80,15 @@ class Play(BaseSWML):
                  say_voice: Optional[str] = None,
                  silence: Optional[float] = None,
                  ring: Optional[Tuple[float, str]] = None):
-        super().__init__("play", urls=urls, url=url, volume=volume, say_voice=say_voice, silence=silence, ring=ring)
+        if url is not None:
+            if urls is None:
+                urls = [url]
+            elif isinstance(urls, list):
+                urls.append(url)
+            elif isinstance(urls, str):
+                urls = [urls, url]
+        super().__init__("play", urls=urls, volume=volume, say_voice=say_voice, silence=silence, ring=ring)
+
 
 class Record(BaseSWML):
     def __init__(self,
