@@ -7,10 +7,7 @@ response = SWMLResponse()
 main_section = response.add_section('main')
 
 # Add the execute instruction to the main_section
-execute_params = {
-    "file": "https://example.com/foo.wav",
-    "digits": "123"
-}
+
 case_dict = {
     1: [Transfer(dest="sales")],
     2: [Transfer(dest="support")],
@@ -19,15 +16,32 @@ case_dict = {
 
 default_case = [Transfer(dest="invalid_choice")]
 
-execute_on_return = Switch(variable="return_value", case=case_dict, default=default_case)
-main_section.execute(dest="my_menu", params=execute_params, on_return=execute_on_return)
+main_section.prompt(play='say:Please press 1 to go to sales, 2 for support, 3 to leave a message', max_digits=1)
+yes = Switch(variable='prompt_value', case=case_dict, default=default_case)
+main_section.add_instruction(yes)
 
-# Add a subroutine_section to the response
-subroutine_section = response.add_section('subroutine')
+# Add a sales section
+sales_section = response.add_section('sales')
+sales_section.play(url='say:This is the Sales Section.')
+sales_section.hangup()
 
-subroutine_section.answer()
-subroutine_section.play(urls=['hello', 'yes'], volume=30)
-subroutine_section.hangup()
+
+# Add a Support section
+support_section = response.add_section('support')
+support_section.play(url='say:This is the Support Section.')
+support_section.hangup()
+
+
+# Add a leave_a_message section
+leave_message_section = response.add_section('leave_a_message')
+leave_message_section.play(url='say:This is the leave a message section.')
+leave_message_section.hangup()
+
+# Invalid choice section
+invalid_choice_section = response.add_section('invalid_choice')
+invalid_choice_section.play(url='say:That was a invalid choice')
+invalid_choice_section.hangup()
+
 
 # Generate the SWML
 swml = response.generate_swml('yaml')

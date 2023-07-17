@@ -33,9 +33,6 @@ class Instruction:
             return self.name
 
 
-
-
-
 class BaseSWML(Instruction):
     def __init__(self, name: str, **kwargs):
         self.name = name
@@ -47,9 +44,11 @@ class Answer(BaseSWML):
     def __init__(self, max_duration: Optional[int] = None):
         super().__init__("answer", max_duration=max_duration)
 
+
 class Hangup(BaseSWML):
     def __init__(self, reason: Optional[str] = None):
         super().__init__("hangup", reason=reason)
+
 
 class Prompt(BaseSWML):
     def __init__(self,
@@ -71,6 +70,7 @@ class Prompt(BaseSWML):
                          digit_timeout=digit_timeout, initial_timeout=initial_timeout, speech_timeout=speech_timeout,
                          speech_end_timeout=speech_end_timeout, speech_language=speech_language,
                          speech_hints=speech_hints)
+
 
 class Play(BaseSWML):
     def __init__(self,
@@ -104,6 +104,7 @@ class Record(BaseSWML):
                          beep=beep, input_sensitivity=input_sensitivity, initial_timeout=initial_timeout,
                          end_silence_timeout=end_silence_timeout)
 
+
 class RecordCall(BaseSWML):
     def __init__(self,
                  control_id: Optional[str] = None,
@@ -119,26 +120,32 @@ class RecordCall(BaseSWML):
                          terminators=terminators, beep=beep, input_sensitivity=input_sensitivity,
                          initial_timeout=initial_timeout, end_silence_timeout=end_silence_timeout)
 
+
 class StopRecordCall(BaseSWML):
     def __init__(self,
                  control_id: Optional[str] = None):
         super().__init__("stop_record_call", control_id=control_id)
 
+
 class JoinRoom(BaseSWML):
     def __init__(self, name: str):
         super().__init__("join_room", name=name)
+
 
 class Denoise(BaseSWML):
     def __init__(self):
         super().__init__("denoise")
 
+
 class StopDenoise(BaseSWML):
     def __init__(self):
         super().__init__("stop_denoise")
 
+
 class ReceiveFax(BaseSWML):
     def __init__(self):
         super().__init__("receive_fax")
+
 
 class SendFax(BaseSWML):
     def __init__(self,
@@ -147,9 +154,11 @@ class SendFax(BaseSWML):
                  identity: Optional[str] = None):
         super().__init__("send_fax", document=document, header_info=header_info, identity=identity)
 
+
 class SipRefer(BaseSWML):
     def __init__(self, to_uri: str):
         super().__init__("sip_refer", to_uri=to_uri)
+
 
 class Connect(BaseSWML):
     def __init__(self,
@@ -167,6 +176,7 @@ class Connect(BaseSWML):
                          session_timeout=session_timeout, ringback=ringback, serial_parallel=serial_parallel,
                          serial=serial, parallel=parallel, to_number=to_number)
 
+
 class Tap(BaseSWML):
     def __init__(self,
                  control_id: Optional[str] = None,
@@ -176,10 +186,12 @@ class Tap(BaseSWML):
         super().__init__("tap", control_id=control_id, audio_direction=audio_direction, target_type=target_type,
                          target=target)
 
+
 class StopTap(BaseSWML):
     def __init__(self,
                  control_id: str):
         super().__init__("stop_tap", control_id=control_id)
+
 
 class SendDigits(BaseSWML):
     def __init__(self,
@@ -187,12 +199,14 @@ class SendDigits(BaseSWML):
                  duration_ms: Optional[int] = None):
         super().__init__("send_digits", digits=digits, duration_ms=duration_ms)
 
+
 class SendSMS(BaseSWML):
     def __init__(self,
                  to: str,
                  from_: str,
                  body: str):
         super().__init__("send_sms", to=to, from_=from_, body=body)
+
 
 class AI(BaseSWML):
     def __init__(self,
@@ -210,6 +224,7 @@ class AI(BaseSWML):
                          post_prompt_auth_password=post_prompt_auth_password, SWAIG=SWAIG, hints=hints,
                          languages=languages)
 
+
 class Transfer(BaseSWML):
     def __init__(self,
                  dest: str,
@@ -225,9 +240,11 @@ class Execute(BaseSWML):
                  on_return: Optional[Dict[str, Any]] = None):
         super().__init__("execute", dest=dest, params=params, on_return=on_return)
 
+
 class Return(BaseSWML):
     def __init__(self, return_value: Optional[Any] = None):
         super().__init__("return", return_value=return_value)
+
 
 class Request(BaseSWML):
     def __init__(self,
@@ -247,8 +264,10 @@ class Request(BaseSWML):
                          connect_timeout=connect_timeout,
                          save_variables=save_variables)
 
+
 class Switch(BaseSWML):
-    def __init__(self, variable: str, case: Optional[Dict[str or int, List[Any]]] = None, default: Optional[List[Any]] = None):
+    def __init__(self, variable: str, case: Optional[Dict[str or int, List[Any]]] = None,
+                 default: Optional[List[Any]] = None):
         case = self.convert_to_dict(case)
         default = self.convert_to_dict(default)
         super().__init__("switch", variable=variable, case=case, default=default)
@@ -260,17 +279,20 @@ class Switch(BaseSWML):
         elif isinstance(value, list) and all(isinstance(x, BaseSWML) for x in value):
             return [x.to_dict() for x in value]
         elif isinstance(value, dict):
-            return {key: [x.to_dict() for x in val] for key, val in value.items()}
+            return {key: [x.to_dict() if isinstance(x, BaseSWML) else x for x in val] for key, val in value.items()}
         else:
             return value
+
 
 class Cond(BaseSWML):
     def __init__(self, when: str, then: List[Any], else_: List[Any]):
         super().__init__("cond", when=when, then=then, else_=else_)
 
+
 class Set(BaseSWML):
     def __init__(self, variables: Dict[str, Any]):
         super().__init__("set", variables=variables)
+
 
 class Unset(BaseSWML):
     def __init__(self, vars: Union[str, List[str]]):
