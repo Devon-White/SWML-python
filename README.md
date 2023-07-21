@@ -12,7 +12,7 @@ pip install swml-python
 
 ## Documentation
 For more details on SWML, please visit the official 
-[SignalWire SWML documentation.](https://developer.signalwire.com/sdks/reference/swml/methods)
+[SignalWire SWML documentation.](https://developer.signalwire.com/sdks/reference/swml/introduction)
 
 ## Getting Started
 To generate SWML with the SDK, you'll first create an instance of SWMLResponse. This object represents an entire SWML response.
