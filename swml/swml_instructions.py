@@ -3,41 +3,86 @@ from collections import OrderedDict
 
 
 class Instruction:
-    def __init__(self, name: str, params: Dict[str, Any] = None):
-        self.name = name
-        self.params = params if params is not None else {}
+    # Initialize an Instruction with a name and parameters
+    def __init__(self, swml_name: str, swml_params: Dict[str, Any] = None):
+        self.swml_name = swml_name
+        self.swml_params = swml_params if swml_params is not None else {}  # If params is not provided, use an empty dictionary
 
+    # Convert an Instruction to_number a dictionary
     def to_dict(self):
-        cleaned_params = []  # Use a list to preserve insertion order
-        for k, v in self.params.items():
-            if v is not None:
-                if isinstance(v, BaseSWML):
-                    cleaned_params.append((k, v.to_dict()))
-                elif isinstance(v, list) and all(isinstance(x, BaseSWML) for x in v):
-                    cleaned_params.append((k, [x.to_dict() for x in v]))
-                elif isinstance(v, dict) and all(isinstance(x, BaseSWML) for x in v.values()):
-                    cleaned_params.append((k, {k2: v2.to_dict() for k2, v2 in v.items()}))
-                elif isinstance(v, list) and any(isinstance(x, BaseSWML) for x in v):
-                    cleaned_params.append((k, [x.to_dict() if isinstance(x, BaseSWML) else x for x in v]))
-                else:
-                    cleaned_params.append((k, v))
+        # For each key-value pair in self.params, if the value is not None, add the pair to_number cleaned_params
+        # If the value is an instance of BaseSWML, convert it to_number a dictionary
+        # Otherwise, use the value as is
+        cleaned_params = {key: (value.to_dict() if isinstance(value, BaseSWML) else value)
+                          for key, value in self.swml_params.items()
+                          if value is not None}
 
-        cleaned_params = dict(cleaned_params)
-
-        if len(cleaned_params) == 1:
-            # If there's only one parameter, return it as the value directly
-            return {self.name: list(cleaned_params.values())[0]}
-        elif cleaned_params:
-            return {self.name: cleaned_params}
-        else:
-            return self.name
+        # If cleaned_params is not empty, return a dictionary with self.name as the key and cleaned_params as the value
+        # If cleaned_params is empty, return self.name
+        return {self.swml_name: cleaned_params} if cleaned_params else self.swml_name
 
 
 class BaseSWML(Instruction):
-    def __init__(self, name: str, **kwargs):
-        self.name = name
-        self.params = OrderedDict(kwargs)
-        super().__init__(name, self.params)
+    def __init__(self, swml_name: str, **kwargs):
+        self.swml_name = swml_name
+        self.swml_params = OrderedDict(kwargs)
+        super().__init__(swml_name, self.swml_params)
+
+
+class AI(BaseSWML):
+    class AIParams:
+        def __init__(self,
+                     direction: Optional[str] = None,
+                     wait_for_user: Optional[bool] = None,
+                     end_of_speech_timeout: Optional[int] = None,
+                     attention_timeout: Optional[int] = None,
+                     inactivity_timeout: Optional[int] = None,
+                     background_file: Optional[str] = None,
+                     background_file_loops: Optional[int] = None,
+                     background_file_volume: Optional[int] = None,
+                     ai_volume: Optional[int] = None,
+                     local_tz: Optional[str] = None,
+                     conscience: Optional[bool] = None,
+                     save_conversation: Optional[bool] = None,
+                     conversation_id: Optional[str] = None,
+                     digit_timeout: Optional[int] = None,
+                     digit_terminators: Optional[str] = None,
+                     energy_level: Optional[int] = None,
+                     swaig_allow_swml: Optional[bool] = None):
+            self.direction = direction
+            self.wait_for_user = wait_for_user
+            self.end_of_speech_timeout = end_of_speech_timeout
+            self.attention_timeout = attention_timeout
+            self.inactivity_timeout = inactivity_timeout
+            self.background_file = background_file
+            self.background_file_loops = background_file_loops
+            self.background_file_volume = background_file_volume
+            self.ai_volume = ai_volume
+            self.local_tz = local_tz
+            self.conscience = conscience
+            self.save_conversation = save_conversation
+            self.conversation_id = conversation_id
+            self.digit_timeout = digit_timeout
+            self.digit_terminators = digit_terminators
+            self.energy_level = energy_level
+            self.swaig_allow_swml = swaig_allow_swml
+
+    def __init__(self,
+                 voice: Optional[str] = None,
+                 prompt: Optional[Dict[str, Any]] = None,
+                 post_prompt: Optional[Dict[str, Any]] = None,
+                 post_prompt_url: Optional[str] = None,
+                 post_prompt_auth_user: Optional[str] = None,
+                 post_prompt_auth_password: Optional[str] = None,
+                 params: Optional[Union[Dict[str, Any], AIParams]] = None,  # Handle both dict and AIParams instance
+                 SWAIG: Optional[List[Dict[str, Any]]] = None,
+                 hints: Optional[List[str]] = None,
+                 languages: Optional[List[Dict[str, Any]]] = None):
+        super().__init__("ai", voice=voice, prompt=prompt, post_prompt=post_prompt, post_prompt_url=post_prompt_url,
+                         post_prompt_auth_user=post_prompt_auth_user,
+                         post_prompt_auth_password=post_prompt_auth_password,
+                         params=params.__dict__ if params else None, SWAIG=SWAIG, hints=hints,
+                         languages=languages)
 
 
 class Answer(BaseSWML):
@@ -45,9 +90,106 @@ class Answer(BaseSWML):
         super().__init__("answer", max_duration=max_duration)
 
 
+class Cond(BaseSWML):
+    def __init__(self,
+                 when: str,
+                 then: List[Any],
+                 else_: List[Any]):
+        params = {"when": when, "then": then, "else": else_}
+        super().__init__("cond", **params)
+
+
+
+class Connect(BaseSWML):
+    def __init__(self,
+                 from_number: Optional[str] = None,
+                 headers: Optional[Dict[str, str]] = None,
+                 codecs: Optional[str] = None,
+                 webrtc_media: Optional[bool] = None,
+                 session_timeout: Optional[int] = None,
+                 ringback: Optional[List[str]] = None,
+                 timeout: Optional[int] = None,
+                 max_duration: Optional[int] = None,
+                 answer_on_bridge: Optional[bool] = None,
+                 call_state_url: Optional[str] = None,
+                 call_state_events: Optional[List[str]] = None,
+                 result: Optional[Union[Dict, List]] = None,
+                 serial_parallel: Optional[List[List[Dict[str, str]]]] = None,
+                 serial: Optional[List[Dict[str, str]]] = None,
+                 parallel: Optional[List[Dict[str, str]]] = None,
+                 to_number: Optional[str] = None,
+                 ):
+        dialing_params = [serial_parallel, serial, parallel, to_number]
+        if sum(param is not None for param in dialing_params) != 1:
+            raise ValueError(
+                "Exactly one of the dialing parameters (serial_parallel, serial, parallel, to_number) must be provided.")
+
+        super().__init__("connect", from_number=from_number, headers=headers, codecs=codecs, webrtc_media=webrtc_media,
+                         session_timeout=session_timeout, ringback=ringback, timeout=timeout, max_duration=max_duration,
+                         answer_on_bridge=answer_on_bridge, call_state_url=call_state_url,
+                         call_state_events=call_state_events,
+                         result=result, serial_parallel=serial_parallel, serial=serial, parallel=parallel,
+                         to_number=to_number)
+
+
+
+class Denoise(BaseSWML):
+    def __init__(self):
+        super().__init__("denoise")
+
+
+class Execute(BaseSWML):
+    def __init__(self,
+                 dest: str,
+                 params: Optional[Dict[str, Any]] = None,
+                 meta: Optional[Dict[str, Any]] = None,
+                 on_return: Optional[Dict[str, Any]] = None):
+        super().__init__("execute", dest=dest, params=params, meta=meta, on_return=on_return)
+
+
+class Goto(BaseSWML):
+    def __init__(self,
+                 label: str,
+                 when: Optional[str] = None,
+                 max_: Optional[int] = None,
+                 meta: Optional[Any] = None):
+        if max_ is not None and (max_ < 1 or max_ > 100):
+            raise ValueError("max_ must be between 1 and 100")
+        params = {'label': label, 'when': when, "max": max_, 'meta': meta}
+        super().__init__("goto", **params)
+
+
+
+
+
+
 class Hangup(BaseSWML):
     def __init__(self, reason: Optional[str] = None):
         super().__init__("hangup", reason=reason)
+
+        if reason is not None and reason not in ['busy', 'hangup', 'decline']:
+            raise ValueError("Hangup reason must be one of the following: 'hangup', 'busy', or 'decline'")
+
+
+class JoinRoom(BaseSWML):
+    def __init__(self, name: str):
+        super().__init__("join_room", name=name)
+
+
+class Play(BaseSWML):
+    def __init__(self,
+                 urls: Optional[Union[str, List[str]]] = None,
+                 url: Optional[str] = None,
+                 volume: Optional[float] = None,
+                 say_voice: Optional[str] = None,
+                 silence: Optional[float] = None,
+                 ring: Optional[Tuple[float, str]] = None):
+        if url is not None and urls is not None:
+            raise ValueError("Cannot provide both 'url' and 'urls'. Please provide only one.")
+        elif url is not None:
+            super().__init__("play", url=url, volume=volume, say_voice=say_voice, silence=silence, ring=ring)
+        else:
+            super().__init__("play", urls=urls, volume=volume, say_voice=say_voice, silence=silence, ring=ring)
 
 
 class Prompt(BaseSWML):
@@ -64,87 +206,102 @@ class Prompt(BaseSWML):
                  speech_timeout: Optional[float] = None,
                  speech_end_timeout: Optional[float] = None,
                  speech_language: Optional[str] = None,
-                 speech_hints: Optional[List[str]] = None):
+                 speech_hints: Optional[List[str]] = None,
+                 result: Optional[Union[dict, list]] = None):
         super().__init__("prompt", play=play, volume=volume, say_voice=say_voice, say_language=say_language,
                          say_gender=say_gender, max_digits=max_digits, terminators=terminators,
                          digit_timeout=digit_timeout, initial_timeout=initial_timeout, speech_timeout=speech_timeout,
                          speech_end_timeout=speech_end_timeout, speech_language=speech_language,
-                         speech_hints=speech_hints)
+                         speech_hints=speech_hints, result=result)
 
 
-class Play(BaseSWML):
-    def __init__(self,
-                 urls: Optional[Union[str, List[str]]] = None,
-                 url: Optional[str] = None,
-                 volume: Optional[float] = None,
-                 say_voice: Optional[str] = None,
-                 silence: Optional[float] = None,
-                 ring: Optional[Tuple[float, str]] = None):
-        if url is not None:
-            if urls is None:
-                urls = [url]
-            elif isinstance(urls, list):
-                urls.append(url)
-            elif isinstance(urls, str):
-                urls = [urls, url]
-        super().__init__("play", urls=urls, volume=volume, say_voice=say_voice, silence=silence, ring=ring)
+class ReceiveFax(BaseSWML):
+    def __init__(self):
+        super().__init__("receive_fax")
 
 
 class Record(BaseSWML):
     def __init__(self,
                  stereo: Optional[bool] = None,
-                 format: Optional[str] = None,
+                 format_: Optional[str] = None,
                  direction: Optional[str] = None,
                  terminators: Optional[str] = None,
                  beep: Optional[bool] = None,
                  input_sensitivity: Optional[float] = None,
                  initial_timeout: Optional[float] = None,
                  end_silence_timeout: Optional[float] = None):
-        super().__init__("record", stereo=stereo, format=format, direction=direction, terminators=terminators,
-                         beep=beep, input_sensitivity=input_sensitivity, initial_timeout=initial_timeout,
-                         end_silence_timeout=end_silence_timeout)
+        params = {
+            "stereo": stereo,
+            "format": format_,
+            "direction": direction,
+            "terminators": terminators,
+            "beep": beep,
+            "input_sensitivity": input_sensitivity,
+            "initial_timeout": initial_timeout,
+            "end_silence_timeout": end_silence_timeout
+        }
+        super().__init__("record", **params)
+
 
 
 class RecordCall(BaseSWML):
     def __init__(self,
                  control_id: Optional[str] = None,
                  stereo: Optional[bool] = None,
-                 format: Optional[str] = None,
+                 format_: Optional[str] = None,
                  direction: Optional[str] = None,
                  terminators: Optional[str] = None,
                  beep: Optional[bool] = None,
                  input_sensitivity: Optional[float] = None,
                  initial_timeout: Optional[float] = None,
                  end_silence_timeout: Optional[float] = None):
-        super().__init__("record_call", control_id=control_id, stereo=stereo, format=format, direction=direction,
-                         terminators=terminators, beep=beep, input_sensitivity=input_sensitivity,
-                         initial_timeout=initial_timeout, end_silence_timeout=end_silence_timeout)
+        params = {
+            "control_id": control_id,
+            "stereo": stereo,
+            "format": format_,
+            "direction": direction,
+            "terminators": terminators,
+            "beep": beep,
+            "input_sensitivity": input_sensitivity,
+            "initial_timeout": initial_timeout,
+            "end_silence_timeout": end_silence_timeout
+        }
+        super().__init__("record_call", **params)
 
 
-class StopRecordCall(BaseSWML):
+
+class Request(BaseSWML):
     def __init__(self,
-                 control_id: Optional[str] = None):
-        super().__init__("stop_record_call", control_id=control_id)
+                 url: str,
+                 method: str,
+                 headers: Optional[Dict[str, str]] = None,
+                 body: Optional[Union[str, Dict[str, Any]]] = None,
+                 timeout: Optional[float] = None,
+                 connect_timeout: Optional[float] = None,
+                 save_variables: Optional[bool] = False):
+        params = {
+            "url": url,
+            "method": method,
+            "headers": headers,
+            "body": body,
+            "timeout": timeout,
+            "connect_timeout": connect_timeout
+        }
+        if save_variables:
+            params["save_variables"] = save_variables
+        super().__init__("request", **params)
 
 
-class JoinRoom(BaseSWML):
-    def __init__(self, name: str):
-        super().__init__("join_room", name=name)
+
+class Return(BaseSWML):
+    def __init__(self, return_value: Optional[Any] = None):
+        super().__init__("return", return_value=return_value)
 
 
-class Denoise(BaseSWML):
-    def __init__(self):
-        super().__init__("denoise")
-
-
-class StopDenoise(BaseSWML):
-    def __init__(self):
-        super().__init__("stop_denoise")
-
-
-class ReceiveFax(BaseSWML):
-    def __init__(self):
-        super().__init__("receive_fax")
+class SendDigits(BaseSWML):
+    def __init__(self,
+                 digits: str):
+        super().__init__("send_digits", digits=digits)
 
 
 class SendFax(BaseSWML):
@@ -155,36 +312,38 @@ class SendFax(BaseSWML):
         super().__init__("send_fax", document=document, header_info=header_info, identity=identity)
 
 
+class SendSMS(BaseSWML):
+    def __init__(self,
+                 to_number: str,
+                 from_number: str,
+                 body: str,
+                 media: Optional[List[str]] = None,
+                 region: Optional[str] = None,
+                 tags: Optional[List[str]] = None):
+        super().__init__("send_sms", to_number=to_number, from_number=from_number, body=body, media=media, region=region, tags=tags)
+
+
+class Set(BaseSWML):
+    def __init__(self, variables: Dict[str, Any]):
+        super().__init__("set", variables=variables)
+
+
 class SipRefer(BaseSWML):
-    def __init__(self, to_uri: str):
-        super().__init__("sip_refer", to_uri=to_uri)
-
-
-class Connect(BaseSWML):
     def __init__(self,
-                 from_number: Optional[str] = None,
-                 headers: Optional[Dict[str, str]] = None,
-                 codecs: Optional[str] = None,
-                 webrtc_media: Optional[bool] = None,
-                 session_timeout: Optional[int] = None,
-                 ringback: Optional[List[str]] = None,
-                 serial_parallel: Optional[List[List[Dict[str, str]]]] = None,
-                 serial: Optional[List[Dict[str, str]]] = None,
-                 parallel: Optional[List[Dict[str, str]]] = None,
-                 to_number: Optional[str] = None):
-        super().__init__("connect", from_number=from_number, headers=headers, codecs=codecs, webrtc_media=webrtc_media,
-                         session_timeout=session_timeout, ringback=ringback, serial_parallel=serial_parallel,
-                         serial=serial, parallel=parallel, to_number=to_number)
+                 to_uri: str,
+                 result: Optional[Union[dict, list]]):
+        super().__init__("sip_refer", to_uri=to_uri, result=result)
 
 
-class Tap(BaseSWML):
+class StopDenoise(BaseSWML):
+    def __init__(self):
+        super().__init__("stop_denoise")
+
+
+class StopRecordCall(BaseSWML):
     def __init__(self,
-                 control_id: Optional[str] = None,
-                 audio_direction: Optional[str] = None,
-                 target_type: Optional[str] = None,
-                 target: Optional[str] = None):
-        super().__init__("tap", control_id=control_id, audio_direction=audio_direction, target_type=target_type,
-                         target=target)
+                 control_id: Optional[str] = None):
+        super().__init__("stop_record_call", control_id=control_id)
 
 
 class StopTap(BaseSWML):
@@ -193,80 +352,10 @@ class StopTap(BaseSWML):
         super().__init__("stop_tap", control_id=control_id)
 
 
-class SendDigits(BaseSWML):
-    def __init__(self,
-                 digits: str,
-                 duration_ms: Optional[int] = None):
-        super().__init__("send_digits", digits=digits, duration_ms=duration_ms)
-
-
-class SendSMS(BaseSWML):
-    def __init__(self,
-                 to: str,
-                 from_: str,
-                 body: str):
-        super().__init__("send_sms", to=to, from_=from_, body=body)
-
-
-class AI(BaseSWML):
-    def __init__(self,
-                 voice: Optional[str] = None,
-                 prompt: Optional[Dict[str, Any]] = None,
-                 post_prompt: Optional[Dict[str, Any]] = None,
-                 post_prompt_url: Optional[str] = None,
-                 post_prompt_auth_user: Optional[str] = None,
-                 post_prompt_auth_password: Optional[str] = None,
-                 SWAIG: Optional[List[Dict[str, Any]]] = None,
-                 hints: Optional[List[str]] = None,
-                 languages: Optional[List[Dict[str, Any]]] = None):
-        super().__init__("ai", voice=voice, prompt=prompt, post_prompt=post_prompt, post_prompt_url=post_prompt_url,
-                         post_prompt_auth_user=post_prompt_auth_user,
-                         post_prompt_auth_password=post_prompt_auth_password, SWAIG=SWAIG, hints=hints,
-                         languages=languages)
-
-
-class Transfer(BaseSWML):
-    def __init__(self,
-                 dest: str,
-                 params: Optional[Dict[str, Any]] = None,
-                 meta: Optional[Dict[str, Any]] = None):
-        super().__init__("transfer", dest=dest, params=params, meta=meta)
-
-
-class Execute(BaseSWML):
-    def __init__(self,
-                 dest: str,
-                 params: Optional[Dict[str, Any]] = None,
-                 on_return: Optional[Dict[str, Any]] = None):
-        super().__init__("execute", dest=dest, params=params, on_return=on_return)
-
-
-class Return(BaseSWML):
-    def __init__(self, return_value: Optional[Any] = None):
-        super().__init__("return", return_value=return_value)
-
-
-class Request(BaseSWML):
-    def __init__(self,
-                 url: str,
-                 method: str,
-                 headers: Optional[Dict[str, str]] = None,
-                 body: Optional[Union[str, Dict[str, Any]]] = None,
-                 timeout: Optional[float] = 5.0,
-                 connect_timeout: Optional[float] = 5.0,
-                 save_variables: Optional[bool] = False):
-        super().__init__("request",
-                         url=url,
-                         method=method,
-                         headers=headers,
-                         body=body,
-                         timeout=timeout,
-                         connect_timeout=connect_timeout,
-                         save_variables=save_variables)
-
-
 class Switch(BaseSWML):
-    def __init__(self, variable: str, case: Optional[Dict[str or int, List[Any]]] = None,
+    def __init__(self,
+                 variable: str,
+                 case: Optional[Dict[str, list]] = None,
                  default: Optional[List[Any]] = None):
         case = self.convert_to_dict(case)
         default = self.convert_to_dict(default)
@@ -284,16 +373,33 @@ class Switch(BaseSWML):
             return value
 
 
-class Cond(BaseSWML):
-    def __init__(self, when: str, then: List[Any], else_: List[Any]):
-        super().__init__("cond", when=when, then=then, else_=else_)
+class Tap(BaseSWML):
+    def __init__(self,
+                 uri: str,
+                 control_id: Optional[str] = None,
+                 direction: Optional[str] = None,
+                 codec: Optional[str] = None,
+                 rtp_ptime: Optional[int] = None):
+        valid_directions = ["speak", "hear", "both"]
+        valid_codecs = ["PCMU", "PCMA"]
+        if direction and direction not in valid_directions:
+            raise ValueError(f"Invalid direction. Expected one of {valid_directions}")
+        if codec and codec not in valid_codecs:
+            raise ValueError(f"Invalid codec. Expected one of {valid_codecs}")
+        super().__init__("tap", uri=uri, control_id=control_id, direction=direction, codec=codec, rtp_ptime=rtp_ptime)
 
 
-class Set(BaseSWML):
-    def __init__(self, variables: Dict[str, Any]):
-        super().__init__("set", variables=variables)
+
+
+class Transfer(BaseSWML):
+    def __init__(self,
+                 dest: str,
+                 params: Optional[Dict[str, Any]] = None,
+                 meta: Optional[Dict[str, Any]] = None,
+                 result: Optional[Union[dict, list]] = None):
+        super().__init__("transfer", dest=dest, params=params, meta=meta, result=result)
 
 
 class Unset(BaseSWML):
-    def __init__(self, vars: Union[str, List[str]]):
-        super().__init__("unset", vars=vars)
+    def __init__(self, _vars: Union[str, List[str]]):
+        super().__init__("unset", vars=_vars)

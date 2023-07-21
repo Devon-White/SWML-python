@@ -69,3 +69,137 @@ This will output a string of SWML that represents the response.
 
 Here's a full example that puts everything together:
 
+```python
+from swml import SWMLResponse, Prompt, Switch, Transfer, Play, Hangup
+
+response = SWMLResponse()
+
+main_section = response.add_section("main")
+main_section.answer()
+
+main_section.record(stereo=True, format_='mp3')
+# Add the prompt instruction
+prompt_instruction = Prompt(
+    play="say:Please say an input",
+    say_language="en-US",
+    max_digits=1,
+    speech_hints=["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"],
+)
+main_section.add_instruction(prompt_instruction)
+
+# Add the switch instruction
+switch_instruction = Switch(
+    variable="prompt_value",
+    case={
+        "1": [Transfer(dest="sales")],
+        "one": [Transfer(dest="sales")]
+    },
+    default=[
+        Play(url="say:That was a bad input, please try again!"),
+        Transfer(dest="main")
+    ]
+)
+main_section.add_instruction(switch_instruction)
+sales_section = response.add_section('sales')
+sales_section.play(url='say:Welcome to Sales')
+sales_section.prompt(
+    play='say:Pick a number between 1 and 3',
+    say_language="en-US",
+    max_digits=1,
+    speech_hints=["one", "two", "three"]
+)
+
+sales_case = {
+    '1': [Play(url="say:Case 1 was chosen"), Hangup()],
+    'one': [Play(url="say:Case one was chosen"), Hangup()],
+    '2': [Play(url='say:Case 2 was chosen'), Hangup()],
+    'two': [Play(url='say:Case two was chosen'), Hangup()],
+    '3': [Play(url='say:Case 3 was chosen'), Hangup()],
+    'three': [Play(url='say:Case three was chosen'), Hangup()]
+
+}
+sales_section.switch(variable='prompt_value', case=sales_case, default=[Transfer(dest='sales')])
+
+swml = response.generate_swml(format_='yaml')
+print(swml)
+```
+
+Which will give the following yaml output:
+
+```yaml
+sections:
+  main:
+  - answer
+  - record:
+      stereo: true
+      format: mp3
+  - prompt:
+      play: say:Please say an input
+      say_language: en-US
+      max_digits: 1
+      speech_hints:
+      - one
+      - two
+      - three
+      - four
+      - five
+      - six
+      - seven
+      - eight
+      - nine
+  - switch:
+      variable: prompt_value
+      case:
+        '1':
+        - transfer:
+            dest: sales
+        one:
+        - transfer:
+            dest: sales
+      default:
+      - play:
+          url: say:That was a bad input, please try again!
+      - transfer:
+          dest: main
+  sales:
+  - play:
+      url: say:Welcome to Sales
+  - prompt:
+      play: say:Pick a number between 1 and 3
+      say_language: en-US
+      max_digits: 1
+      speech_hints:
+      - one
+      - two
+      - three
+  - switch:
+      variable: prompt_value
+      case:
+        '1':
+        - play:
+            url: say:Case 1 was chosen
+        - hangup
+        one:
+        - play:
+            url: say:Case one was chosen
+        - hangup
+        '2':
+        - play:
+            url: say:Case 2 was chosen
+        - hangup
+        two:
+        - play:
+            url: say:Case two was chosen
+        - hangup
+        '3':
+        - play:
+            url: say:Case 3 was chosen
+        - hangup
+        three:
+        - play:
+            url: say:Case three was chosen
+        - hangup
+      default:
+      - transfer:
+          dest: sales
+```
