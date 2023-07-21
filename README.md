@@ -1,6 +1,6 @@
 # SWML Python SDK
 
-The SWML Python SDK allows you to generate SWML (Sample Widget Markup Language) in Python. SWML is a markup language used to control phone call behavior. This SDK provides classes for each SWML instruction and a convenient way to build sections and responses.
+The SWML Python SDK allows you to generate SWML (SignalWire Markup Language) in Python. SWML is a markup language used to control phone call behavior. This SDK provides classes for each SWML instruction and a convenient way to build sections and responses.
 
 ## Installation
 
