@@ -17,7 +17,7 @@ For more details on SWML, please visit the official
 ## Getting Started
 To generate SWML with the SDK, you'll first create an instance of SWMLResponse. This object represents an entire SWML response.
 
-Within a response, you can create one or more "sections". Each section is a collection of instructions that are 
+Within a response, you can create one or more **"sections"**. Each section is a collection of instructions that are 
 executed in when called. You create a section using the add_section method and give it a name:
 
 ```python
@@ -31,6 +31,8 @@ Once you have a section, you can add instructions to it. Each instruction corres
 **Answer**, **Hangup**, or **Play**. You can add an instruction using the corresponding method on the section object:
 
 ```python
+response = SWMLResponse()
+main_section = response.add_section('main')
 main_section.answer(max_duration=30)
 main_section.play(url="https://example_1.com")
 main_section.hangup()
@@ -38,6 +40,25 @@ main_section.hangup()
 
 In this example, we've added three instructions to the main section: an Answer instruction, a Play instruction, 
 and a Hangup instruction.
+
+
+You can also add instructions by creating instances of the instruction classes and adding them to the section using the
+**add_instruction** method. This is useful when you need to create complex instructions that have many parameters:
+
+```python
+send_sms_instance = SendSMS(to_number="+1XXXXXXXXXX", from_="+1XXXXXXXXXX", body="Message Body", media=["url1", "url2"],
+                            region="us", tags=["Custom", "data"])
+main_section.add_instruction(send_sms_instance)
+```
+
+In addition, you can add raw SWML JSON to a section using the **add_instruction** method. This can be useful when you have
+existing SWML JSON that you want to include in a section:
+
+```python
+raw_swml_json = '{"send_sms": {"to_number": "+1XXXXXXXXXX", "from": "+1XXXXXXXXXX", "body": "Message Body", "media": ["url1", "url2"], "region": "us", "tags": ["Custom", "data"]}}'
+main_section.add_instruction(raw_swml_json)
+```
+
 
 ## Generating SWML
 Once you've added all the desired sections and instructions, you can generate the SWML from the response using the 
