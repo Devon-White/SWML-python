@@ -43,7 +43,8 @@ and a Hangup instruction.
 
 
 You can also add instructions by creating instances of the instruction classes and adding them to the section using the
-**add_instruction** method. This is useful when you need to create complex instructions that have many parameters:
+**add_instruction** method. This is useful when you need to create complex instructions that have many parameters or if 
+you want to use the same instance declaration in multiple parts of your code:
 
 ```python
 send_sms_instance = SendSMS(to_number="+1XXXXXXXXXX", from_="+1XXXXXXXXXX", body="Message Body", media=["url1", "url2"],
