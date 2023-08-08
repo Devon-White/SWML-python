@@ -16,15 +16,15 @@ class Section:
 
     def ai(self,
            voice: Optional[str] = None,
-           prompt: Optional[Dict[str, Any]] = None,
-           post_prompt: Optional[Dict[str, Any]] = None,
+           prompt: Optional[Union[Dict[str, Any], AI.PromptParams]] = None,
+           post_prompt: Optional[Union[Dict[str, Any], AI.PromptParams]] = None,
            post_prompt_url: Optional[str] = None,
            post_prompt_auth_user: Optional[str] = None,
            post_prompt_auth_password: Optional[str] = None,
-           params: Optional[Union[Dict[str, Any], AI.AIParams]] = None,  # Handle both dict and AIParams instance
-           SWAIG: Optional[List[Dict[str, Any]]] = None,
+           params: Optional[Union[Dict[str, Any], AI.AIParams]] = None,
+           SWAIG: Optional[Union[Dict[str, Any], AI.SWAIGParams]] = None,
            hints: Optional[List[str]] = None,
-           languages: Optional[List[Dict[str, Any]]] = None):
+           languages: Optional[Union[List[Dict[str, Any]], List[AI.LanguageParams]]] = None):
         self.add_instruction(AI(voice=voice,
                                 prompt=prompt,
                                 post_prompt=post_prompt,
@@ -105,7 +105,7 @@ class Section:
         self.add_instruction(JoinRoom(name=name))
 
     def play(self,
-             urls: Optional[Union[str, List[str]]] = None,
+             urls: Optional[List[str]] = None,
              url: Optional[str] = None,
              volume: Optional[float] = None,
              say_voice: Optional[str] = None,

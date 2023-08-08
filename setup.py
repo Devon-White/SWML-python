@@ -1,9 +1,13 @@
 from setuptools import setup, find_packages
-import swml
+
+version = "0.1.2.2"
 
 setup(
     name='swml-python',
-    version=swml.__version__,
+    version=version,
+    install_requires=[
+        "PyYAML ~= 6.0"
+    ],
     packages=find_packages(exclude=('tests', 'tests.*')),
     description='A Python wrapper for the new SignalWire product SWML (SignalWire MarkUp Language) ',
     long_description=open('README.md').read(),

@@ -1,25 +1,24 @@
-from typing import Dict, Any, List, Optional, Union, Tuple
 from collections import OrderedDict
+from typing import Optional, Dict, Any, Union, List, Tuple
+import json
+
+
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj, '__dict__'):
+            return {key: value for key, value in obj.__dict__.items() if value is not None}
+        return super().default(obj)
 
 
 class Instruction:
-    # Initialize an Instruction with a name and parameters
     def __init__(self, swml_name: str, swml_params: Dict[str, Any] = None):
         self.swml_name = swml_name
-        self.swml_params = swml_params if swml_params is not None else {}  # If params is not provided, use an empty dictionary
+        self.swml_params = swml_params if swml_params is not None else {}
 
-    # Convert an Instruction to_number a dictionary
     def to_dict(self):
-        # For each key-value pair in self.params, if the value is not None, add the pair to_number cleaned_params
-        # If the value is an instance of BaseSWML, convert it to_number a dictionary
-        # Otherwise, use the value as is
-        cleaned_params = {key: (value.to_dict() if isinstance(value, BaseSWML) else value)
-                          for key, value in self.swml_params.items()
-                          if value is not None}
-
-        # If cleaned_params is not empty, return a dictionary with self.name as the key and cleaned_params as the value
-        # If cleaned_params is empty, return self.name
-        return {self.swml_name: cleaned_params} if cleaned_params else self.swml_name
+        cleaned_params = {key: value for key, value in self.swml_params.items() if value is not None}
+        return {self.swml_name: json.loads(
+            json.dumps(cleaned_params, cls=CustomJSONEncoder))} if cleaned_params else self.swml_name
 
 
 class BaseSWML(Instruction):
@@ -29,59 +28,90 @@ class BaseSWML(Instruction):
         super().__init__(swml_name, self.swml_params)
 
 
+class LanguageParams:
+    def __init__(self, name: str, code: str, voice: str):
+        self.name = name
+        self.code = code
+        self.voice = voice
+
+
+class PromptParams:
+    def __init__(self, text: Optional[str] = None, language: Optional[str] = None):
+        self.text = text
+        self.language = language
+
+
+class SWAIGFunction:
+    def __init__(self, function: str, web_hook_url: str):
+        self.function = function
+        self.web_hook_url = web_hook_url
+
+
+class SWAIGParams:
+    def __init__(self, functions: List[SWAIGFunction]):
+        self.functions = functions
+
+
+class AIParams:
+    def __init__(self,
+                 direction: Optional[str] = None,
+                 wait_for_user: Optional[bool] = None,
+                 end_of_speech_timeout: Optional[int] = None,
+                 attention_timeout: Optional[int] = None,
+                 inactivity_timeout: Optional[int] = None,
+                 background_file: Optional[str] = None,
+                 background_file_loops: Optional[int] = None,
+                 background_file_volume: Optional[int] = None,
+                 ai_volume: Optional[int] = None,
+                 local_tz: Optional[str] = None,
+                 conscience: Optional[bool] = None,
+                 save_conversation: Optional[bool] = None,
+                 conversation_id: Optional[str] = None,
+                 digit_timeout: Optional[int] = None,
+                 digit_terminators: Optional[str] = None,
+                 energy_level: Optional[int] = None,
+                 swaig_allow_swml: Optional[bool] = None):
+        self.direction = direction
+        self.wait_for_user = wait_for_user
+        self.end_of_speech_timeout = end_of_speech_timeout
+        self.attention_timeout = attention_timeout
+        self.inactivity_timeout = inactivity_timeout
+        self.background_file = background_file
+        self.background_file_loops = background_file_loops
+        self.background_file_volume = background_file_volume
+        self.ai_volume = ai_volume
+        self.local_tz = local_tz
+        self.conscience = conscience
+        self.save_conversation = save_conversation
+        self.conversation_id = conversation_id
+        self.digit_timeout = digit_timeout
+        self.digit_terminators = digit_terminators
+        self.energy_level = energy_level
+        self.swaig_allow_swml = swaig_allow_swml
+
+
 class AI(BaseSWML):
-    class AIParams:
-        def __init__(self,
-                     direction: Optional[str] = None,
-                     wait_for_user: Optional[bool] = None,
-                     end_of_speech_timeout: Optional[int] = None,
-                     attention_timeout: Optional[int] = None,
-                     inactivity_timeout: Optional[int] = None,
-                     background_file: Optional[str] = None,
-                     background_file_loops: Optional[int] = None,
-                     background_file_volume: Optional[int] = None,
-                     ai_volume: Optional[int] = None,
-                     local_tz: Optional[str] = None,
-                     conscience: Optional[bool] = None,
-                     save_conversation: Optional[bool] = None,
-                     conversation_id: Optional[str] = None,
-                     digit_timeout: Optional[int] = None,
-                     digit_terminators: Optional[str] = None,
-                     energy_level: Optional[int] = None,
-                     swaig_allow_swml: Optional[bool] = None):
-            self.direction = direction
-            self.wait_for_user = wait_for_user
-            self.end_of_speech_timeout = end_of_speech_timeout
-            self.attention_timeout = attention_timeout
-            self.inactivity_timeout = inactivity_timeout
-            self.background_file = background_file
-            self.background_file_loops = background_file_loops
-            self.background_file_volume = background_file_volume
-            self.ai_volume = ai_volume
-            self.local_tz = local_tz
-            self.conscience = conscience
-            self.save_conversation = save_conversation
-            self.conversation_id = conversation_id
-            self.digit_timeout = digit_timeout
-            self.digit_terminators = digit_terminators
-            self.energy_level = energy_level
-            self.swaig_allow_swml = swaig_allow_swml
+    PromptParams = PromptParams
+    SWAIGFunction = SWAIGFunction
+    SWAIGParams = SWAIGParams
+    AIParams = AIParams
+    LanguageParams = LanguageParams
 
     def __init__(self,
                  voice: Optional[str] = None,
-                 prompt: Optional[Dict[str, Any]] = None,
+                 prompt: Optional[Union[Dict[str, Any], PromptParams]] = None,
                  post_prompt: Optional[Dict[str, Any]] = None,
                  post_prompt_url: Optional[str] = None,
                  post_prompt_auth_user: Optional[str] = None,
                  post_prompt_auth_password: Optional[str] = None,
-                 params: Optional[Union[Dict[str, Any], AIParams]] = None,  # Handle both dict and AIParams instance
-                 SWAIG: Optional[List[Dict[str, Any]]] = None,
+                 params: Optional[Union[Dict[str, Any], AIParams]] = None,
+                 SWAIG: Optional[Union[Dict[str, Any], SWAIGParams]] = None,
                  hints: Optional[List[str]] = None,
                  languages: Optional[List[Dict[str, Any]]] = None):
         super().__init__("ai", voice=voice, prompt=prompt, post_prompt=post_prompt, post_prompt_url=post_prompt_url,
                          post_prompt_auth_user=post_prompt_auth_user,
                          post_prompt_auth_password=post_prompt_auth_password,
-                         params=params.__dict__ if params else None, SWAIG=SWAIG, hints=hints,
+                         params=params, SWAIG=SWAIG, hints=hints,
                          languages=languages)
 
 
@@ -97,7 +127,6 @@ class Cond(BaseSWML):
                  else_: List[Any]):
         params = {"when": when, "then": then, "else": else_}
         super().__init__("cond", **params)
-
 
 
 class Connect(BaseSWML):
@@ -124,13 +153,26 @@ class Connect(BaseSWML):
             raise ValueError(
                 "Exactly one of the dialing parameters (serial_parallel, serial, parallel, to_number) must be provided.")
 
-        super().__init__("connect", from_number=from_number, headers=headers, codecs=codecs, webrtc_media=webrtc_media,
-                         session_timeout=session_timeout, ringback=ringback, timeout=timeout, max_duration=max_duration,
-                         answer_on_bridge=answer_on_bridge, call_state_url=call_state_url,
-                         call_state_events=call_state_events,
-                         result=result, serial_parallel=serial_parallel, serial=serial, parallel=parallel,
-                         to_number=to_number)
+        params = {
+            "from": from_number,
+            "headers": headers,
+            "codecs": codecs,
+            "webrtc_media": webrtc_media,
+            "session_timeout": session_timeout,
+            "ringback": ringback,
+            "timeout": timeout,
+            "max_duration": max_duration,
+            "answer_on_bridge": answer_on_bridge,
+            "call_state_url": call_state_url,
+            "call_state_events": call_state_events,
+            "result": result,
+            "serial_parallel": serial_parallel,
+            "serial": serial,
+            "parallel": parallel,
+            "to": to_number
+        }
 
+        super().__init__("connect", **params)
 
 
 class Denoise(BaseSWML):
@@ -159,10 +201,6 @@ class Goto(BaseSWML):
         super().__init__("goto", **params)
 
 
-
-
-
-
 class Hangup(BaseSWML):
     def __init__(self, reason: Optional[str] = None):
         super().__init__("hangup", reason=reason)
@@ -178,7 +216,7 @@ class JoinRoom(BaseSWML):
 
 class Play(BaseSWML):
     def __init__(self,
-                 urls: Optional[Union[str, List[str]]] = None,
+                 urls: Optional[List[str]] = None,
                  url: Optional[str] = None,
                  volume: Optional[float] = None,
                  say_voice: Optional[str] = None,
@@ -243,7 +281,6 @@ class Record(BaseSWML):
         super().__init__("record", **params)
 
 
-
 class RecordCall(BaseSWML):
     def __init__(self,
                  control_id: Optional[str] = None,
@@ -269,7 +306,6 @@ class RecordCall(BaseSWML):
         super().__init__("record_call", **params)
 
 
-
 class Request(BaseSWML):
     def __init__(self,
                  url: str,
@@ -290,7 +326,6 @@ class Request(BaseSWML):
         if save_variables:
             params["save_variables"] = save_variables
         super().__init__("request", **params)
-
 
 
 class Return(BaseSWML):
@@ -320,7 +355,8 @@ class SendSMS(BaseSWML):
                  media: Optional[List[str]] = None,
                  region: Optional[str] = None,
                  tags: Optional[List[str]] = None):
-        super().__init__("send_sms", to_number=to_number, from_number=from_number, body=body, media=media, region=region, tags=tags)
+        super().__init__("send_sms", to_number=to_number, from_number=from_number, body=body, media=media,
+                         region=region, tags=tags)
 
 
 class Set(BaseSWML):
@@ -387,8 +423,6 @@ class Tap(BaseSWML):
         if codec and codec not in valid_codecs:
             raise ValueError(f"Invalid codec. Expected one of {valid_codecs}")
         super().__init__("tap", uri=uri, control_id=control_id, direction=direction, codec=codec, rtp_ptime=rtp_ptime)
-
-
 
 
 class Transfer(BaseSWML):

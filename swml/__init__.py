@@ -4,4 +4,3 @@ from .swml_instructions import Answer, Hangup, Prompt, Play, Record, RecordCall,
 
 from .swml_response import Section, SWMLResponse
 
-__version__ = '0.1.0'

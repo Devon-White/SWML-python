@@ -14,7 +14,7 @@ class TestSWMLConnect(unittest.TestCase):
                               call_state_events=["created", "ringing", "answered", "ended"],
                               result={"case": {"connected": [{"hangup": {}}], "default": [{"execute": "voicemail"}, {"hangup": {}}]}},
                               to_number="+1XXXXXXXXXX")
-        expected_swml = '{"sections": {"main": [{"connect": {"from_number": "+1XXXXXXXXXX", "headers": {"X-Custom-Header": "value"}, "codecs": "PCMU", "webrtc_media": true, "session_timeout": 180, "ringback": ["http://example.com/ringback.mp3"], "timeout": 60, "max_duration": 7200, "answer_on_bridge": true, "call_state_url": "http://example.com/call_state", "call_state_events": ["created", "ringing", "answered", "ended"], "result": {"case": {"connected": [{"hangup": {}}], "default": [{"execute": "voicemail"}, {"hangup": {}}]}}, "to_number": "+1XXXXXXXXXX"}}]}}'
+        expected_swml = '{"sections": {"main": [{"connect": {"from": "+1XXXXXXXXXX", "headers": {"X-Custom-Header": "value"}, "codecs": "PCMU", "webrtc_media": true, "session_timeout": 180, "ringback": ["http://example.com/ringback.mp3"], "timeout": 60, "max_duration": 7200, "answer_on_bridge": true, "call_state_url": "http://example.com/call_state", "call_state_events": ["created", "ringing", "answered", "ended"], "result": {"case": {"connected": [{"hangup": {}}], "default": [{"execute": "voicemail"}, {"hangup": {}}]}}, "to": "+1XXXXXXXXXX"}}]}}'
         self.assertEqual(self.response.generate_swml(), expected_swml)
 
     def test_add_instruction_with_connect_instance(self):
@@ -24,9 +24,9 @@ class TestSWMLConnect(unittest.TestCase):
                                    call_state_url="http://example.com/call_state",
                                    call_state_events=["created", "ringing", "answered", "ended"],
                                    result={"case": {"connected": [{"hangup": {}}], "default": [{"execute": "voicemail"}, {"hangup": {}}]}},
-                                   serial=[{"to_number": "+1XXXXXXXXXX"}, {"to_number": "+1XXXXXXXXXX"}])
+                                   serial=[{"to": "+1XXXXXXXXXX"}, {"to": "+1XXXXXXXXXX"}])
         main_section = self.response.add_section('main')
         main_section.add_instruction(connect_instance)
-        expected_swml = '{"sections": {"main": [{"connect": {"from_number": "+1XXXXXXXXXX", "headers": {"X-Custom-Header": "value"}, "codecs": "PCMU", "webrtc_media": true, "session_timeout": 180, "ringback": ["http://example.com/ringback.mp3"], "timeout": 60, "max_duration": 7200, "answer_on_bridge": true, "call_state_url": "http://example.com/call_state", "call_state_events": ["created", "ringing", "answered", "ended"], "result": {"case": {"connected": [{"hangup": {}}], "default": [{"execute": "voicemail"}, {"hangup": {}}]}}, "serial": [{"to_number": "+1XXXXXXXXXX"}, {"to_number": "+1XXXXXXXXXX"}]}}]}}'
+        expected_swml = '{"sections": {"main": [{"connect": {"from": "+1XXXXXXXXXX", "headers": {"X-Custom-Header": "value"}, "codecs": "PCMU", "webrtc_media": true, "session_timeout": 180, "ringback": ["http://example.com/ringback.mp3"], "timeout": 60, "max_duration": 7200, "answer_on_bridge": true, "call_state_url": "http://example.com/call_state", "call_state_events": ["created", "ringing", "answered", "ended"], "result": {"case": {"connected": [{"hangup": {}}], "default": [{"execute": "voicemail"}, {"hangup": {}}]}}, "serial": [{"to": "+1XXXXXXXXXX"}, {"to": "+1XXXXXXXXXX"}]}}]}}'
         self.assertEqual(self.response.generate_swml(), expected_swml)
 
