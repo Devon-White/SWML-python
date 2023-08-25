@@ -36,20 +36,81 @@ class LanguageParams:
 
 
 class PromptParams:
-    def __init__(self, text: Optional[str] = None, language: Optional[str] = None):
+    def __init__(self,
+                 text: Optional[str] = None,
+                 language: Optional[str] = None,
+                 temperature: Optional[float] = None,
+                 top_p: Optional[float] = None,
+                 confidence: Optional[float] = None,
+                 presence_penalty: Optional[float] = None,
+                 frequency_penalty: Optional[float] = None,
+                 result: Optional[Union[Dict[str, Any], List[Any]]] = None):
         self.text = text
         self.language = language
+        self.temperature = temperature
+        self.top_p = top_p
+        self.confidence = confidence
+        self.presence_penalty = presence_penalty
+        self.frequency_penalty = frequency_penalty
+        self.result = result
 
 
 class SWAIGFunction:
-    def __init__(self, function: str, web_hook_url: str):
+    class FunctionArgs:
+        class PropertyDetail:
+            def __init__(self,
+                         type_: Optional[str] = None,
+                         description: Optional[str] = None):
+                self.type = type_
+                self.description = description
+
+        def __init__(self,
+                     type_: str,
+                     properties: Optional[Dict[str, PropertyDetail]] = None):
+            self.type = type_
+            self.properties = properties if properties else {}
+
+    def __init__(self,
+                 function: str,
+                 purpose: str,
+                 web_hook_url: Optional[str] = None,
+                 web_hook_auth_user: Optional[str] = None,
+                 web_hook_auth_pass: Optional[str] = None,
+                 argument: Union[Optional[Dict[str, Any]], Optional[FunctionArgs]] = None,
+                 data_map: Optional[Dict[str, Any]] = None):
         self.function = function
         self.web_hook_url = web_hook_url
+        self.web_hook_auth_user = web_hook_auth_user
+        self.web_hook_auth_pass = web_hook_auth_pass
+        self.purpose = purpose
+        self.argument = argument
+        self.data_map = data_map
+
+
+class SWAIGDefaults:
+    def __init__(self,
+                 web_hook_url: Optional[str] = None,
+                 web_hook_auth_user: Optional[str] = None,
+                 web_hook_auth_password: Optional[str] = None,
+                 meta_data: Optional[Dict[str, Any]] = None,
+                 meta_data_token: Optional[str] = None):
+        self.web_hook_url = web_hook_url
+        self.web_hook_auth_user = web_hook_auth_user
+        self.web_hook_auth_password = web_hook_auth_password
+        self.meta_data = meta_data
+        self.meta_data_token = meta_data_token
 
 
 class SWAIGParams:
-    def __init__(self, functions: List[SWAIGFunction]):
+    def __init__(self,
+                 functions: Optional[Union[List[SWAIGFunction], List[Dict[str, Any]]]] = None,
+                 defaults: Optional[Union[SWAIGDefaults, Dict[str, Any]]] = None,
+                 native_functions: Optional[List[str]] = None,
+                 includes: Optional[List[Dict[str, Any]]] = None):
         self.functions = functions
+        self.defaults = defaults
+        self.native_functions = native_functions
+        self.includes = includes
 
 
 class AIParams:
@@ -94,6 +155,7 @@ class AI(BaseSWML):
     PromptParams = PromptParams
     SWAIGFunction = SWAIGFunction
     SWAIGParams = SWAIGParams
+    SWAIGDefaults = SWAIGDefaults
     AIParams = AIParams
     LanguageParams = LanguageParams
 
