@@ -1,4 +1,3 @@
-import dataclasses
 from .swml_instructions import *
 import json
 import yaml
