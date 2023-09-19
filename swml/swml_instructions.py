@@ -1,15 +1,8 @@
+from typing import List, Dict, Union, Optional, Any, Tuple
 from collections import OrderedDict
-from typing import Optional, Dict, Any, Union, List, Tuple
 import json
 
-
-class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if hasattr(obj, '__dict__'):
-            return {key: value for key, value in obj.__dict__.items() if value is not None}
-        return super().default(obj)
-
-
+# Instruction Class
 class Instruction:
     def __init__(self, swml_name: str, swml_params: Dict[str, Any] = None):
         self.swml_name = swml_name
@@ -17,24 +10,108 @@ class Instruction:
 
     def to_dict(self):
         cleaned_params = {key: value for key, value in self.swml_params.items() if value is not None}
+
+        # Handle Action objects in the cleaned_params
+        for k, v in cleaned_params.items():
+            if isinstance(v, list) and all(isinstance(item, Action) for item in v):
+                cleaned_params[k] = [item.__dict__ for item in v]
+
         return {self.swml_name: json.loads(
             json.dumps(cleaned_params, cls=CustomJSONEncoder))} if cleaned_params else self.swml_name
 
 
+# BaseSWML Class
 class BaseSWML(Instruction):
     def __init__(self, swml_name: str, **kwargs):
         self.swml_name = swml_name
         self.swml_params = OrderedDict(kwargs)
         super().__init__(swml_name, self.swml_params)
 
+# Action Classes
+class Action:
+    pass
 
+
+class SWML(Action):
+    def __init__(self, swml_object: Dict[str, Any]):
+        self.swml_object = swml_object
+
+
+class Say(Action):
+    def __init__(self, message: str):
+        self.message = message
+
+
+class Stop(Action):
+    def __init__(self, stop: bool = True):
+        self.stop = stop
+
+
+class ToggleFunctions(Action):
+    def __init__(self, active: bool = True, functions: List[str] = None):
+        self.active = active
+        self.functions = functions if functions else []
+
+
+class BackToBackFunctions(Action):
+    def __init__(self, back_to_back: bool = False):
+        self.back_to_back = back_to_back
+
+
+class SetMetaData(Action):
+    def __init__(self, meta_data: Dict[str, Any]):
+        self.meta_data = meta_data
+
+
+class PlaybackBG(Action):
+    def __init__(self, file: str, wait: bool = False):
+        self.file = file
+        self.wait = wait
+
+
+class StopPlaybackBG(Action):
+    def __init__(self, stop_playback: bool = True):
+        self.stop_playback = stop_playback
+
+
+class UserInput(Action):
+    def __init__(self, input_text: str):
+        self.input_text = input_text
+
+
+OutputAction = Union[
+    SWML, Say, Stop, ToggleFunctions, BackToBackFunctions, SetMetaData, PlaybackBG, StopPlaybackBG, UserInput]
+
+
+# Custom JSON Encoder
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj, '__dict__'):
+            return {key: value for key, value in obj.__dict__.items() if value is not None}
+        return super().default(obj)
+
+
+# LanguageParams Class
 class LanguageParams:
-    def __init__(self, name: str, code: str, voice: str):
+    def __init__(self, name: Optional[str] = None,
+                 code: Optional[str] = None,
+                 voice: Optional[str] = None,
+                 fillers: Optional[List[str]] = None):
         self.name = name
         self.code = code
         self.voice = voice
+        self.fillers = fillers
 
 
+class Pronounce:
+    def __init__(self,
+                 replace: str,
+                 with_: str,
+                 ignore_case: Optional[bool] = True):
+        params = {"replace": replace, "with": with_, "ignore_case": ignore_case}
+        super().__init__("pronounce", **params)
+
+# PromptParams Class
 class PromptParams:
     def __init__(self,
                  text: Optional[str] = None,
@@ -55,7 +132,52 @@ class PromptParams:
         self.result = result
 
 
+# DataMapExpression Class
+class DataMapExpression:
+    class DataMapExpressionOutput:
+        def __init__(self, output_response: Optional[str] = None,
+                     output_action: Optional[List[OutputAction]] = None):
+            self.output_response = output_response
+            self.output_action = output_action
+
+    def __init__(self, string: str, pattern: str, output_response: Optional[str] = None,
+                 output_action: Optional[List[OutputAction]] = None):
+        self.string = string
+        self.pattern = pattern
+        self.output = self.DataMapExpressionOutput(output_response, output_action)
+
+
+# DataMapWebhook Class
+class DataMapWebhook:
+    class DataMapWebhookOutput:
+        def __init__(self, output_response: Optional[str] = None,
+                     output_action: Optional[List[OutputAction]] = None):
+            self.output_response = output_response
+            self.output_action = output_action
+
+    def __init__(self, url: str, headers: Dict[str, str], method: str, output_response: Optional[str] = None,
+                 output_action: Optional[List[OutputAction]] = None):
+        self.url = url
+        self.headers = headers
+        self.method = method
+        self.output = self.DataMapWebhookOutput(output_response, output_action)
+
+
+# DataMap Class
+class DataMap:
+    Expressions = DataMapExpression
+    Webhooks = DataMapWebhook
+
+    def __init__(self, expressions: Union[Optional[List[DataMapExpression]], Optional[List]] = None,
+                 webhooks: Union[Optional[List[DataMapWebhook]], Optional[List]] = None):
+        self.expressions = expressions if expressions else []
+        self.webhooks = webhooks if webhooks else []
+
+
+# SWAIGFunction Class
 class SWAIGFunction:
+    DataMap = DataMap
+
     class FunctionArgs:
         class PropertyDetail:
             def __init__(self,
@@ -77,7 +199,7 @@ class SWAIGFunction:
                  web_hook_auth_user: Optional[str] = None,
                  web_hook_auth_pass: Optional[str] = None,
                  argument: Union[Optional[Dict[str, Any]], Optional[FunctionArgs]] = None,
-                 data_map: Optional[Dict[str, Any]] = None):
+                 data_map: Union[Optional[Dict[str, Any]], Optional[DataMap]] = None):
         self.function = function
         self.web_hook_url = web_hook_url
         self.web_hook_auth_user = web_hook_auth_user
@@ -87,6 +209,7 @@ class SWAIGFunction:
         self.data_map = data_map
 
 
+# SWAIGDefaults Class
 class SWAIGDefaults:
     def __init__(self,
                  web_hook_url: Optional[str] = None,
@@ -101,6 +224,7 @@ class SWAIGDefaults:
         self.meta_data_token = meta_data_token
 
 
+# SWAIGParams Class
 class SWAIGParams:
     def __init__(self,
                  functions: Optional[Union[List[SWAIGFunction], List[Dict[str, Any]]]] = None,
@@ -113,6 +237,7 @@ class SWAIGParams:
         self.includes = includes
 
 
+# AIParams Class
 class AIParams:
     def __init__(self,
                  direction: Optional[str] = None,
@@ -151,6 +276,7 @@ class AIParams:
         self.swaig_allow_swml = swaig_allow_swml
 
 
+# AI Class
 class AI(BaseSWML):
     PromptParams = PromptParams
     SWAIGFunction = SWAIGFunction
@@ -158,6 +284,7 @@ class AI(BaseSWML):
     SWAIGDefaults = SWAIGDefaults
     AIParams = AIParams
     LanguageParams = LanguageParams
+    Pronounce = Pronounce
 
     def __init__(self,
                  voice: Optional[str] = None,
@@ -169,12 +296,13 @@ class AI(BaseSWML):
                  params: Optional[Union[Dict[str, Any], AIParams]] = None,
                  SWAIG: Optional[Union[Dict[str, Any], SWAIGParams]] = None,
                  hints: Optional[List[str]] = None,
-                 languages: Optional[List[Dict[str, Any]]] = None):
+                 languages: Optional[List[Dict[str, Any]]] = None,
+                 pronounce: Union[Optional[Dict[str, Any]], Pronounce] = None):
         super().__init__("ai", voice=voice, prompt=prompt, post_prompt=post_prompt, post_prompt_url=post_prompt_url,
                          post_prompt_auth_user=post_prompt_auth_user,
                          post_prompt_auth_password=post_prompt_auth_password,
                          params=params, SWAIG=SWAIG, hints=hints,
-                         languages=languages)
+                         languages=languages, pronounce=pronounce)
 
 
 class Answer(BaseSWML):
