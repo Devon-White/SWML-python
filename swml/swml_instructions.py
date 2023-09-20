@@ -2,6 +2,7 @@ from typing import List, Dict, Union, Optional, Any, Tuple
 from collections import OrderedDict
 import json
 
+
 # Custom JSON Encoder
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -22,9 +23,11 @@ class Instruction:
         cleaned_params = {key: value for key, value in self.swml_params.items() if value is not None}
 
         # Handle Action objects in the cleaned_params
-        for k, v in cleaned_params.items():
+        for k, v in list(cleaned_params.items()):
             if isinstance(v, list) and all(isinstance(item, Action) for item in v):
-                cleaned_params[k] = [item.__dict__ for item in v]
+                # Convert the list of Action objects to a dictionary
+                action_dict = {item.swml_name: item.__dict__ for item in v}
+                cleaned_params[k] = action_dict
 
         return {self.swml_name: json.loads(
             json.dumps(cleaned_params, cls=CustomJSONEncoder))} if cleaned_params else self.swml_name
@@ -50,7 +53,7 @@ class SWML():
 
 class Say(Action):
     def __init__(self, message: str):
-        self.message = message
+        self.say = message
 
 
 class Stop(Action):
@@ -65,13 +68,13 @@ class ToggleFunctions(Action):
 
 
 class BackToBackFunctions(Action):
-    def __init__(self, back_to_back: bool = False):
-        self.back_to_back = back_to_back
+    def __init__(self, back_to_back_functions: bool = False):
+        self.back_to_back_functions = back_to_back_functions
 
 
 class SetMetaData(Action):
     def __init__(self, meta_data: Dict[str, Any]):
-        self.meta_data = meta_data
+        self.set_meta_data = meta_data
 
 
 class PlaybackBG(Action):
@@ -82,12 +85,12 @@ class PlaybackBG(Action):
 
 class StopPlaybackBG(Action):
     def __init__(self, stop_playback: bool = True):
-        self.stop_playback = stop_playback
+        self.stop_playback_bg = stop_playback
 
 
 class UserInput(Action):
     def __init__(self, input_text: str):
-        self.input_text = input_text
+        self.user_input = input_text
 
 
 # LanguageParams Class
@@ -184,7 +187,6 @@ class SWAIGFunction:
                          description: Optional[str] = None):
                 self.type = type_
                 self.description = description
-
 
         def __init__(self,
                      type_: str,
