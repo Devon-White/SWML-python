@@ -135,7 +135,7 @@ class PromptParams:
 class DataMapExpression:
     class DataMapExpressionOutput:
         def __init__(self, response: Optional[str] = None,
-                     action: Optional[List[Action]] = None):
+                     action: Union[Optional[List[Action]], Dict[str, Any]] = None):
             self.response = response
             self.action = action
 
@@ -149,7 +149,7 @@ class DataMapExpression:
 class DataMapWebhook:
     class DataMapWebhookOutput:
         def __init__(self, response: Optional[str] = None,
-                     action: Optional[List[Action, Dict]] = None):
+                     action: Union[Optional[List[Action]], Dict[str, Any]] = None):
             self.response = response
             self.action = action
 
