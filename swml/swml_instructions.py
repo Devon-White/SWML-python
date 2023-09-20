@@ -135,32 +135,30 @@ class PromptParams:
 # DataMapExpression Class
 class DataMapExpression:
     class DataMapExpressionOutput:
-        def __init__(self, output_response: Optional[str] = None,
-                     output_action: Optional[List[OutputAction]] = None):
-            self.output_response = output_response
-            self.output_action = output_action
+        def __init__(self, response: Optional[str] = None,
+                     action: Optional[List[OutputAction]] = None):
+            self.response = response
+            self.action = action
 
-    def __init__(self, string: str, pattern: str, output_response: Optional[str] = None,
-                 output_action: Optional[List[OutputAction]] = None):
+    def __init__(self, string: str, pattern: str, output: Union[DataMapExpressionOutput, Dict[str, Any]]):
         self.string = string
         self.pattern = pattern
-        self.output = self.DataMapExpressionOutput(output_response, output_action)
+        self.output = output
 
 
 # DataMapWebhook Class
 class DataMapWebhook:
     class DataMapWebhookOutput:
-        def __init__(self, output_response: Optional[str] = None,
-                     output_action: Optional[List[OutputAction]] = None):
-            self.output_response = output_response
-            self.output_action = output_action
+        def __init__(self, response: Optional[str] = None,
+                     action: Optional[List[OutputAction]] = None):
+            self.response = response
+            self.action = action
 
-    def __init__(self, url: str, headers: Dict[str, str], method: str, output_response: Optional[str] = None,
-                 output_action: Optional[List[OutputAction]] = None):
+    def __init__(self, url: str, headers: Dict[str, str], method: str, output: Union[DataMapWebhookOutput, Dict[str, Any]]):
         self.url = url
         self.headers = headers
         self.method = method
-        self.output = self.DataMapWebhookOutput(output_response, output_action)
+        self.output = output
 
 
 # DataMap Class
@@ -170,8 +168,8 @@ class DataMap:
 
     def __init__(self, expressions: Union[Optional[List[DataMapExpression]], Optional[List]] = None,
                  webhooks: Union[Optional[List[DataMapWebhook]], Optional[List]] = None):
-        self.expressions = expressions if expressions else []
-        self.webhooks = webhooks if webhooks else []
+        self.expressions = expressions if expressions else None
+        self.webhooks = webhooks if webhooks else None
 
 
 # SWAIGFunction Class
