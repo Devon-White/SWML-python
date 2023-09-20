@@ -2,6 +2,7 @@ from typing import List, Dict, Union, Optional, Any, Tuple
 from collections import OrderedDict
 import json
 
+
 # Instruction Class
 class Instruction:
     def __init__(self, swml_name: str, swml_params: Dict[str, Any] = None):
@@ -26,6 +27,7 @@ class BaseSWML(Instruction):
         self.swml_name = swml_name
         self.swml_params = OrderedDict(kwargs)
         super().__init__(swml_name, self.swml_params)
+
 
 # Action Classes
 class Action:
@@ -79,10 +81,6 @@ class UserInput(Action):
         self.input_text = input_text
 
 
-OutputAction = Union[
-    SWML, Say, Stop, ToggleFunctions, BackToBackFunctions, SetMetaData, PlaybackBG, StopPlaybackBG, UserInput]
-
-
 # Custom JSON Encoder
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -111,6 +109,7 @@ class Pronounce:
         params = {"replace": replace, "with": with_, "ignore_case": ignore_case}
         super().__init__("pronounce", **params)
 
+
 # PromptParams Class
 class PromptParams:
     def __init__(self,
@@ -136,7 +135,7 @@ class PromptParams:
 class DataMapExpression:
     class DataMapExpressionOutput:
         def __init__(self, response: Optional[str] = None,
-                     action: Optional[List[OutputAction]] = None):
+                     action: Optional[List[Action]] = None):
             self.response = response
             self.action = action
 
@@ -150,11 +149,12 @@ class DataMapExpression:
 class DataMapWebhook:
     class DataMapWebhookOutput:
         def __init__(self, response: Optional[str] = None,
-                     action: Optional[List[OutputAction]] = None):
+                     action: Optional[List[Action, Dict]] = None):
             self.response = response
             self.action = action
 
-    def __init__(self, url: str, headers: Dict[str, str], method: str, output: Union[DataMapWebhookOutput, Dict[str, Any]]):
+    def __init__(self, url: str, headers: Dict[str, str], method: str,
+                 output: Union[DataMapWebhookOutput, Dict[str, Any]]):
         self.url = url
         self.headers = headers
         self.method = method
