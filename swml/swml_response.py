@@ -16,9 +16,9 @@ class Section:
             raise ValueError("You cannot pass a set of empty instructions. Please pass a valid SWML instruction.")
 
     def ai(self, voice=None, prompt=None, post_prompt=None, post_prompt_url=None, post_prompt_auth_user=None,
-           post_prompt_auth_password=None, params=None, SWAIG=None, hints=None, languages=None, pronounce=None, **kwargs):
+           post_prompt_auth_password=None, params=None, SWAIG=None, hints=None, languages=None, pronounce=None):
         self.add_instruction(AI(voice, prompt, post_prompt, post_prompt_url, post_prompt_auth_user,
-                                post_prompt_auth_password, params, SWAIG, hints, languages, pronounce, **kwargs))
+                                post_prompt_auth_password, params, SWAIG, hints, languages, pronounce))
 
     def answer(self, max_duration=None):
         self.add_instruction(Answer(max_duration))

@@ -211,7 +211,8 @@ class SWAIGFunction:
                  web_hook_auth_user: Optional[str] = None,
                  web_hook_auth_pass: Optional[str] = None,
                  argument: Union[Optional[Dict[str, Any]], Optional[FunctionArgs]] = None,
-                 data_map: Union[Optional[Dict[str, Any]], Optional[DataMap]] = None):
+                 data_map: Union[Optional[Dict[str, Any]], Optional[DataMap]] = None,
+                 **kwargs):
         self.function = function
         self.web_hook_url = web_hook_url
         self.web_hook_auth_user = web_hook_auth_user
@@ -219,6 +220,10 @@ class SWAIGFunction:
         self.purpose = purpose
         self.argument = argument
         self.data_map = data_map
+
+        # Setting instance variables based on kwargs
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 # SWAIGDefaults Class
@@ -309,13 +314,12 @@ class AI(BaseSWML):
                  SWAIG: Optional[Union[Dict[str, Any], SWAIGParams]] = None,
                  hints: Optional[List[str]] = None,
                  languages: Optional[List[Dict[str, Any]]] = None,
-                 pronounce: Union[Optional[Dict[str, Any]], Pronounce] = None,
-                 **kwargs):
+                 pronounce: Union[Optional[Dict[str, Any]], Pronounce] = None):
         super().__init__("ai", voice=voice, prompt=prompt, post_prompt=post_prompt, post_prompt_url=post_prompt_url,
                          post_prompt_auth_user=post_prompt_auth_user,
                          post_prompt_auth_password=post_prompt_auth_password,
                          params=params, SWAIG=SWAIG, hints=hints,
-                         languages=languages, pronounce=pronounce, **kwargs)
+                         languages=languages, pronounce=pronounce)
 
 
 class Answer(BaseSWML):
