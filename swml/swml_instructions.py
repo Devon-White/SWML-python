@@ -2,16 +2,7 @@ from typing import List, Dict, Union, Optional, Any, Tuple
 from collections import OrderedDict
 import json
 
-
-def find_sets_in_dict(d, path=[]):
-    for k, v in d.items():
-        current_path = path + [k]
-        if isinstance(v, set):
-            print(f"Found set at path: {' -> '.join(map(str, current_path))}, Value: {v}")
-        elif isinstance(v, dict):
-            find_sets_in_dict(v, current_path)
-
-
+# Custom JSON Encoder
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, set):
@@ -32,8 +23,6 @@ class Instruction:
 
         # Handle Action objects in the cleaned_params
         for k, v in cleaned_params.items():
-            if isinstance(k, set):
-                print(f"Key with set value: {k}, Value: {v}")
             if isinstance(v, list) and all(isinstance(item, Action) for item in v):
                 cleaned_params[k] = [item.__dict__ for item in v]
 
@@ -54,7 +43,7 @@ class Action:
     pass
 
 
-class SWML(Action):
+class SWML():
     def __init__(self, swml_object: Dict[str, Any]):
         self.swml_object = swml_object
 
@@ -189,14 +178,13 @@ class SWAIGFunction:
     DataMap = DataMap
 
     class FunctionArgs:
-        class PropertyDetail(Instruction):  # Inherit from Instruction
+        class PropertyDetail:  # Inherit from Instruction
             def __init__(self,
                          type_: Optional[str] = None,
                          description: Optional[str] = None):
-                super().__init__("property_detail", {"type": type_, "description": description})
+                self.type = type_
+                self.description = description
 
-            def to_dict(self):
-                return self.swml_params  # Return the serialized swml_params
 
         def __init__(self,
                      type_: str,
