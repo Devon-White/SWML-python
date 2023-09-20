@@ -3,6 +3,24 @@ from collections import OrderedDict
 import json
 
 
+def find_sets_in_dict(d, path=[]):
+    for k, v in d.items():
+        current_path = path + [k]
+        if isinstance(v, set):
+            print(f"Found set at path: {' -> '.join(map(str, current_path))}, Value: {v}")
+        elif isinstance(v, dict):
+            find_sets_in_dict(v, current_path)
+
+
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        if hasattr(obj, '__dict__'):
+            return {key: value for key, value in obj.__dict__.items() if value is not None}
+        return super().default(obj)
+
+
 # Instruction Class
 class Instruction:
     def __init__(self, swml_name: str, swml_params: Dict[str, Any] = None):
@@ -14,6 +32,8 @@ class Instruction:
 
         # Handle Action objects in the cleaned_params
         for k, v in cleaned_params.items():
+            if isinstance(k, set):
+                print(f"Key with set value: {k}, Value: {v}")
             if isinstance(v, list) and all(isinstance(item, Action) for item in v):
                 cleaned_params[k] = [item.__dict__ for item in v]
 
@@ -79,14 +99,6 @@ class StopPlaybackBG(Action):
 class UserInput(Action):
     def __init__(self, input_text: str):
         self.input_text = input_text
-
-
-# Custom JSON Encoder
-class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if hasattr(obj, '__dict__'):
-            return {key: value for key, value in obj.__dict__.items() if value is not None}
-        return super().default(obj)
 
 
 # LanguageParams Class
@@ -177,12 +189,14 @@ class SWAIGFunction:
     DataMap = DataMap
 
     class FunctionArgs:
-        class PropertyDetail:
+        class PropertyDetail(Instruction):  # Inherit from Instruction
             def __init__(self,
                          type_: Optional[str] = None,
                          description: Optional[str] = None):
-                self.type = type_
-                self.description = description
+                super().__init__("property_detail", {"type": type_, "description": description})
+
+            def to_dict(self):
+                return self.swml_params  # Return the serialized swml_params
 
         def __init__(self,
                      type_: str,
