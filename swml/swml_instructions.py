@@ -309,12 +309,13 @@ class AI(BaseSWML):
                  SWAIG: Optional[Union[Dict[str, Any], SWAIGParams]] = None,
                  hints: Optional[List[str]] = None,
                  languages: Optional[List[Dict[str, Any]]] = None,
-                 pronounce: Union[Optional[Dict[str, Any]], Pronounce] = None):
+                 pronounce: Union[Optional[Dict[str, Any]], Pronounce] = None,
+                 **kwargs):
         super().__init__("ai", voice=voice, prompt=prompt, post_prompt=post_prompt, post_prompt_url=post_prompt_url,
                          post_prompt_auth_user=post_prompt_auth_user,
                          post_prompt_auth_password=post_prompt_auth_password,
                          params=params, SWAIG=SWAIG, hints=hints,
-                         languages=languages, pronounce=pronounce)
+                         languages=languages, pronounce=pronounce, **kwargs)
 
 
 class Answer(BaseSWML):
