@@ -63,8 +63,7 @@ class Stop(Action):
 
 class ToggleFunctions(Action):
     def __init__(self, active: bool = True, functions: List[str] = None):
-        self.active = active
-        self.functions = functions if functions else []
+        self.toggle_functions = [{"active": active, "function": functions}]
 
 
 class BackToBackFunctions(Action):
