@@ -1,8 +1,6 @@
-from typing import List, Dict, Union, Optional, Any, Tuple, NewType
+from typing import List, Dict, Union, Optional, Any, Tuple
 from collections import OrderedDict
 import json
-
-
 
 
 # Custom JSON Encoder
@@ -63,8 +61,6 @@ class SWML(Action):
         else:
             raise ValueError("swml_object must be a dictionary or a string. You can use the generate_swml method to"
                              "generate a SWML string from a SWMLResponse object.")
-
-
 
 
 class Say(Action):
