@@ -1,6 +1,8 @@
-from typing import List, Dict, Union, Optional, Any, Tuple
+from typing import List, Dict, Union, Optional, Any, Tuple, NewType
 from collections import OrderedDict
 import json
+
+
 
 
 # Custom JSON Encoder
@@ -46,9 +48,23 @@ class Action:
     pass
 
 
-class SWML():
-    def __init__(self, swml_object: Dict[str, Any]):
-        self.swml_object = swml_object
+class SWMLResponse:
+    pass
+
+
+class SWML(Action):
+    def __init__(self, swml_object: Union[Dict[str, Any], str]):
+        # Checks to see if the swml_object is a dictionary or a string
+        if isinstance(swml_object, dict):
+            self.SWML = json.dumps(swml_object)
+
+        elif isinstance(swml_object, str):
+            self.SWML = json.loads(swml_object)
+        else:
+            raise ValueError("swml_object must be a dictionary or a string. You can use the generate_swml method to"
+                             "generate a SWML string from a SWMLResponse object.")
+
+
 
 
 class Say(Action):
@@ -62,7 +78,7 @@ class Stop(Action):
 
 
 class ToggleFunctions(Action):
-    def __init__(self, active: bool = True, functions: List[str] = None):
+    def __init__(self, active: bool = True, functions: Union[List[str], str] = None):
         self.toggle_functions = [{"active": active, "function": functions}]
 
 
