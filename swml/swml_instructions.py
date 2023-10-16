@@ -20,17 +20,31 @@ class Instruction:
         self.swml_params = swml_params if swml_params is not None else {}
 
     def to_dict(self):
-        cleaned_params = {key: value for key, value in self.swml_params.items() if value is not None}
+        """Convert the object to a dictionary representation."""
 
-        # Handle Action objects in the cleaned_params
-        for k, v in list(cleaned_params.items()):
-            if isinstance(v, list) and all(isinstance(item, Action) for item in v):
-                # Convert the list of Action objects to a dictionary
-                action_dict = {item.swml_name: item.__dict__ for item in v}
-                cleaned_params[k] = action_dict
+        def _is_action_list(value):
+            """Check if a value is a list of Action objects."""
+            return isinstance(value, list) and all(isinstance(item, Action) for item in value)
 
-        return {self.swml_name: json.loads(
-            json.dumps(cleaned_params, cls=CustomJSONEncoder))} if cleaned_params else self.swml_name
+        def _convert_action_list_to_dict(action_list):
+            """Convert a list of Action objects to a dictionary."""
+            return {item.swml_name: item.__dict__ for item in action_list}
+
+        def _clean_parameters(parameters):
+            """Remove parameters with None values and convert action lists to dictionaries."""
+            cleaned = {}
+            for key, value in parameters.items():
+                if value is not None:
+                    cleaned[key] = _convert_action_list_to_dict(value) if _is_action_list(value) else value
+            return cleaned
+
+        cleaned_params = _clean_parameters(self.swml_params)
+
+        # Serialize the cleaned parameters and return
+        if cleaned_params:
+            return {self.swml_name: json.loads(json.dumps(cleaned_params, cls=CustomJSONEncoder))}
+        else:
+            return {self.swml_name: None}
 
 
 # BaseSWML Class
@@ -61,6 +75,11 @@ class SWML(Action):
         else:
             raise ValueError("swml_object must be a dictionary or a string. You can use the generate_swml method to"
                              "generate a SWML string from a SWMLResponse object.")
+
+
+class ContextSwitch(Action):
+    def __init__(self, system_prompt: str, user_prompt: str = None, consolidate: bool = None):
+        self.context_switch = {"system_prompt": system_prompt, "user_prompt": user_prompt, "consolidate": consolidate}
 
 
 class Say(Action):
@@ -109,11 +128,14 @@ class LanguageParams:
     def __init__(self, name: Optional[str] = None,
                  code: Optional[str] = None,
                  voice: Optional[str] = None,
-                 fillers: Optional[List[str]] = None):
+                 fillers: Optional[List[str]] = None,
+                 engine: Optional[str] = None,):
         self.name = name
         self.code = code
         self.voice = voice
         self.fillers = fillers
+        self.engine = engine
+
 
 
 class Pronounce:
@@ -208,12 +230,14 @@ class SWAIGFunction:
     def __init__(self,
                  function: str,
                  purpose: str,
+                 active: Optional[bool] = None,
                  web_hook_url: Optional[str] = None,
                  web_hook_auth_user: Optional[str] = None,
                  web_hook_auth_pass: Optional[str] = None,
                  argument: Union[Optional[Dict[str, Any]], Optional[FunctionArgs]] = None,
                  data_map: Union[Optional[Dict[str, Any]], Optional[DataMap]] = None,
                  **kwargs):
+        self.active = active
         self.function = function
         self.web_hook_url = web_hook_url
         self.web_hook_auth_user = web_hook_auth_user
@@ -274,7 +298,8 @@ class AIParams:
                  digit_timeout: Optional[int] = None,
                  digit_terminators: Optional[str] = None,
                  energy_level: Optional[int] = None,
-                 swaig_allow_swml: Optional[bool] = None):
+                 swaig_allow_swml: Optional[bool] = None,
+                 **kwargs):
         self.direction = direction
         self.wait_for_user = wait_for_user
         self.end_of_speech_timeout = end_of_speech_timeout
@@ -292,6 +317,10 @@ class AIParams:
         self.digit_terminators = digit_terminators
         self.energy_level = energy_level
         self.swaig_allow_swml = swaig_allow_swml
+
+        # Setting instance variables based on kwargs
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 # AI Class

@@ -16,9 +16,10 @@ def represent_str(dumper, data):
     if '\n' in data:
         # Use block literal style for multiline strings
         return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+
     else:
         # Use plain style for other strings
-        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='"')
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style=None)
 
 
 # Register the custom representer for strings
@@ -153,18 +154,31 @@ class SWMLResponse:
         return section
 
     def generate_swml(self, format_: str = "json") -> str:
-        if format_ not in SUPPORTED_FORMATS:
-            raise ValueError(f"Invalid format. Supported formats are {', '.join(SUPPORTED_FORMATS)}.")
-
-        sections_dict = {k: [(inst.to_dict() if isinstance(inst, Instruction) else inst) for inst in v.instructions] for
-                         k, v in self.sections.items()}
-
+        self._validate_format(format_)
+        sections_dict = self._generate_sections_dict()
         return self._serialize(sections_dict, format_)
 
     @staticmethod
+    def _validate_format(format_):
+        """Validate the provided format."""
+        if format_ not in SUPPORTED_FORMATS:
+            raise ValueError(f"Invalid format. Supported formats are {', '.join(SUPPORTED_FORMATS)}.")
+
+    def _generate_sections_dict(self) -> Dict[str, Any]:
+        """Generate a dictionary representation of the sections."""
+        return {
+            k: [(inst.to_dict() if isinstance(inst, Instruction) else inst) for inst in v.instructions]
+            for k, v in self.sections.items()
+        }
+
+    @staticmethod
     def _serialize(sections_dict: Dict[str, Any], format_: str) -> str:
+        """Serialize the sections dictionary based on the specified format."""
         if format_ == "json":
             return json.dumps({"sections": sections_dict}, sort_keys=False)
         else:
-            return yaml.dump({"sections": sections_dict}, sort_keys=False, default_flow_style=False,
-                             Dumper=CustomDumper)
+            # Assuming yaml is the other format
+            return yaml.dump({"sections": sections_dict}, sort_keys=False, default_flow_style=False, Dumper=CustomDumper, indent=2)
+
+    def __str__(self):
+        return self.generate_swml()
