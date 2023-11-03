@@ -18,11 +18,19 @@ For more details on SWML, please visit the official
 To generate SWML with the SDK, you'll first create an instance of SWMLResponse. This object represents an entire SWML response.
 
 Within a response, you can create one or more **"sections"**. Each section is a collection of instructions that are 
-executed in when called. You create a section using the add_section method and give it a name:
+executed in when called. You create a section using the `add_section` method and give it a name:
 
 ```python
-response = SWMLResponse()
+response = SignalWireML()
 main_section = response.add_section('main')
+other_section = response.add_section('other')
+```
+
+Additionally, you can create a section by creating an instance of the Section class and adding it to the `SignalWireML` object:
+
+```python
+main_section = Section('main')
+response.add_section(main_section)
 ```
 
 ## Adding Instructions
@@ -31,7 +39,7 @@ Once you have a section, you can add instructions to it. Each instruction corres
 **Answer**, **Hangup**, or **Play**. You can add an instruction using the corresponding method on the section object:
 
 ```python
-response = SWMLResponse()
+response = SignalWireML()
 main_section = response.add_section('main')
 main_section.answer(max_duration=30)
 main_section.play(url="https://example_1.com")
@@ -77,7 +85,7 @@ print(swml)
 You can also convert the response directly to a string to get a json response:
 
 ```python
-response = SWMLResponse()
+response = SignalWireML()
 main_section = response.add_section('main')
 main_section.answer()
 main_section.hangup()
@@ -92,9 +100,9 @@ This will output a string of SWML that represents the response.
 Here's a full example that puts everything together:
 
 ```python
-from swml import SWMLResponse, Prompt, Switch, Transfer, Play, Hangup
+from swml import *
 
-response = SWMLResponse()
+response = SignalWireML()
 
 main_section = response.add_section("main")
 main_section.answer()
@@ -142,7 +150,7 @@ sales_case = {
 }
 sales_section.switch(variable='prompt_value', case=sales_case, default=[Transfer(dest='sales')])
 
-swml = response.generate_swml(format_='yaml')
+swml = response.generate_swml(data_format='yaml')
 print(swml)
 ```
 
